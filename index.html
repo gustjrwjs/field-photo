@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1e2a24">
+<title>현장사진</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #eef0ec; --card: #ffffff; --text: #1d2420; --muted: #66706a; --line: #d9ddd6;
+    --head: #1e2a24; --head-text: #f2f5f1;
+    --accent: #e2611b; --accent-text: #fff; --ok: #2f8a5b; --warn: #c58a12; --bad: #c0392b;
+    --shadow: 0 1px 2px rgba(0,0,0,.06), 0 6px 18px rgba(0,0,0,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #121614; --card: #1c221f; --text: #e8ece9; --muted: #98a29c; --line: #2c3430;
+      --head: #0b0e0c; --head-text: #e8ece9; --shadow: 0 1px 2px rgba(0,0,0,.4); }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", "Malgun Gothic", sans-serif; font-size: 16px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  [hidden] { display: none !important; }
+
+  header { position: sticky; top: 0; z-index: 5; background: var(--head); color: var(--head-text);
+    padding: max(8px, env(safe-area-inset-top)) 12px 0; }
+  .bar { display: flex; align-items: center; gap: 8px; max-width: 900px; margin: 0 auto; }
+  .prj { flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,.08);
+    border: 0; border-radius: 10px; padding: 9px 12px; text-align: left; font-weight: 700; font-size: 17px; }
+  .prj span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .prj small { font-weight: 400; opacity: .7; font-size: 13px; flex-shrink: 0; }
+  .icon-btn { background: rgba(255,255,255,.08); border: 0; border-radius: 10px; width: 42px; height: 42px;
+    display: grid; place-items: center; flex-shrink: 0; }
+  .gps { font-size: 12px; padding: 4px 8px; border-radius: 99px; background: rgba(255,255,255,.1); white-space: nowrap; flex-shrink: 0; }
+  .gps::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; background: #888; vertical-align: 0; }
+  .gps.ok::before { background: #4cd38a; } .gps.mid::before { background: #f0b429; } .gps.no::before { background: #ef5b4c; }
+  .tabs { display: flex; max-width: 900px; margin: 8px auto 0; }
+  .tabs button { flex: 1; background: none; border: 0; padding: 10px; opacity: .6; border-bottom: 3px solid transparent; font-weight: 600; }
+  .tabs button.on { opacity: 1; border-color: var(--accent); }
+
+  main { max-width: 900px; margin: 0 auto; padding: 12px 12px calc(110px + env(safe-area-inset-bottom)); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .tile { background: var(--card); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); border: 0; padding: 0; text-align: left; }
+  .tile .ph { aspect-ratio: 4/3; background: #888 center/cover no-repeat; position: relative; }
+  .tile .no { position: absolute; left: 6px; top: 6px; background: rgba(0,0,0,.65); color: #fff; font-size: 13px; font-weight: 700; padding: 2px 7px; border-radius: 6px; }
+  .tile .nogps { position: absolute; right: 6px; top: 6px; background: var(--bad); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 6px; }
+  .tile .cap { padding: 7px 9px 9px; }
+  .tile .lb { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tile .tm { font-size: 12px; color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); padding: 60px 20px; line-height: 1.7; }
+  .empty b { color: var(--text); }
+  #map { height: calc(100dvh - 210px); min-height: 320px; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); background: var(--card); }
+  .map-msg { padding: 30px; text-align: center; color: var(--muted); }
+
+  .dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; display: flex; justify-content: center; align-items: center; gap: 22px;
+    padding: 12px 16px max(14px, env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--bg) 35%); }
+  .side { width: 64px; display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: 0; font-size: 12px; color: var(--muted); }
+  .side i { width: 50px; height: 50px; border-radius: 50%; background: var(--card); box-shadow: var(--shadow); display: grid; place-items: center; color: var(--text); }
+  .shot { width: 78px; height: 78px; border-radius: 50%; border: 5px solid var(--card); background: var(--accent); box-shadow: 0 6px 20px rgba(226,97,27,.4);
+    display: grid; place-items: center; color: #fff; }
+  .shot:active { transform: scale(.95); }
+  svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .shot svg { width: 34px; height: 34px; }
+
+  dialog { border: 0; padding: 0; width: min(560px, 100%); max-height: 100dvh; background: var(--card); color: var(--text);
+    border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+  dialog::backdrop { background: rgba(0,0,0,.5); }
+  @media (max-width: 600px) { dialog { margin: auto 0 0; max-width: 100%; border-radius: 16px 16px 0 0; } }
+  .sheet { display: flex; flex-direction: column; max-height: 92dvh; }
+  .sheet h2 { margin: 0; font-size: 17px; padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 8px; }
+  .sheet h2 .x { margin-left: auto; background: none; border: 0; font-size: 26px; line-height: 1; color: var(--muted); padding: 0 4px; }
+  .body { padding: 14px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  .foot { padding: 12px 16px max(12px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); display: flex; gap: 8px; flex-wrap: wrap; }
+  .foot .grow { flex: 1; }
+  .preview { width: 100%; max-height: 42dvh; object-fit: contain; background: #000; border-radius: 10px; display: block; }
+  label.f { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+  .row { display: flex; gap: 10px; } .row > * { flex: 1; min-width: 0; } .row > .n { flex: 0 0 88px; }
+  input[type=text], input[type=number], select, textarea { width: 100%; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px;
+    background: var(--bg); font-size: 16px; }
+  textarea { min-height: 72px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .btn { border: 0; border-radius: 10px; padding: 12px 16px; font-weight: 600; background: var(--bg); border: 1px solid var(--line); }
+  .btn.pri { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  .btn.danger { color: var(--bad); }
+  .btn.sm { padding: 7px 10px; font-size: 14px; }
+  .loc { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 14px; background: var(--bg); border-radius: 10px; padding: 10px 12px; }
+  .loc .t { flex: 1; min-width: 160px; }
+  .loc .t.no { color: var(--bad); }
+  .muted { color: var(--muted); font-size: 13px; }
+  .list { display: flex; flex-direction: column; gap: 6px; }
+  .item { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 10px; background: var(--bg); border: 2px solid transparent; text-align: left; width: 100%; }
+  .item.on { border-color: var(--accent); }
+  .item .nm { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chk { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+  .chk label { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+  .chk input { width: 20px; height: 20px; accent-color: var(--accent); }
+  .exp { display: grid; gap: 8px; }
+  .exp .btn { text-align: left; display: flex; flex-direction: column; gap: 2px; }
+  .exp .btn small { font-weight: 400; color: var(--muted); }
+  .exp .btn.pri small { color: rgba(255,255,255,.85); }
+  .fields { display: flex; flex-direction: column; gap: 10px; padding-top: 10px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  .chips button { border: 1px solid var(--line); background: var(--card); border-radius: 99px; padding: 6px 11px; font-size: 14px; color: var(--text); }
+  .chips button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  details summary { cursor: pointer; padding: 10px 12px; background: var(--bg); border-radius: 10px; font-size: 15px; }
+  .strip { display: flex; gap: 6px; overflow-x: auto; }
+  .strip img { width: 96px; height: 72px; object-fit: cover; border-radius: 8px; flex-shrink: 0; cursor: pointer; }
+  .site { display: block; padding: 12px; border-radius: 12px; background: var(--card); box-shadow: var(--shadow); border: 0; text-align: left; width: 100%; }
+  .site .hd { display: flex; align-items: baseline; gap: 8px; }
+  .site .hd b { flex: 1; font-size: 16px; }
+  .site .kv { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  .site .strip { margin-top: 8px; } .site .strip img { width: 72px; height: 54px; }
+  .bar-mini { height: 4px; background: var(--line); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .bar-mini i { display: block; height: 100%; background: var(--ok); }
+  .shots { display: flex; flex-direction: column; gap: 8px; background: var(--bg); border-radius: 12px; padding: 12px; }
+  .shots-hd { display: flex; align-items: center; gap: 8px; } .shots-hd b { flex: 1; }
+  .sgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .sgrid:empty { display: none; }
+  .sgrid button { position: relative; padding: 0; border: 0; border-radius: 8px; overflow: hidden; aspect-ratio: 4/3; background: #888 center/cover; }
+  .sgrid button span { position: absolute; left: 4px; top: 4px; background: rgba(0,0,0,.65); color: #fff; font-size: 12px; font-weight: 700; padding: 1px 6px; border-radius: 5px; }
+  .sgrid button i { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; font-style: normal; padding: 2px 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  details.info summary { padding: 9px 12px; font-size: 14px; }
+  .kvs { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; padding: 10px 4px 2px; }
+  .kvs dt { color: var(--muted); } .kvs dd { margin: 0; }
+  .site .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .kste { padding: 3px 9px; border-radius: 8px; background: #fff; color: #1f7a45; border: 2px solid #1f9d55; font: 700 13px/18px system-ui, sans-serif;
+    white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,.3); cursor: pointer; }
+  .kste.done { background: #1f9d55; color: #fff; }
+  .shots + .shots { margin-top: 8px; }
+  .sgrid button.rep { outline: 3px solid #f5b400; outline-offset: -3px; }
+  .sgrid button b { position: absolute; right: 4px; top: 2px; color: #f5b400; font-size: 18px; text-shadow: 0 0 3px #000; }
+  .repchk { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+  .repchk input { width: 20px; height: 20px; accent-color: var(--accent); }
+  .rep-card { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 14px 16px; }
+  .rep-card h3 { margin: 0 0 8px; font-size: 16px; }
+  .steps { margin: 0 0 8px; padding-left: 20px; line-height: 1.6; font-size: 14px; }
+  .rrow { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--card); border-radius: 10px; font-size: 14px; }
+  .rrow b { flex: 1; } .rrow .ok { color: var(--ok); font-weight: 700; } .rrow .no { color: var(--bad); }
+  .ghbox { background: var(--bg); border-radius: 10px; padding: 10px 12px; }
+  .install { padding: 5px 10px; font-size: 13px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+    border: 1px solid var(--accent); color: #fff; background: var(--accent); font-weight: 700; }
+  .install[hidden] { display: none; }
+  @media (max-width: 430px) {             /* 좁은 폰: 현장 이름이 보이도록 머리줄을 줄임 */
+    .bar { gap: 5px; } .prj { padding: 8px 9px; font-size: 16px; } .prj small { display: none; }
+    .install { padding: 4px 8px; font-size: 12px; }
+    .gps { font-size: 11px; padding: 4px 6px; max-width: 86px; overflow: hidden; text-overflow: ellipsis; }
+    .icon-btn { width: 38px; height: 38px; }
+  }
+  .drop { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 26px 14px; margin-top: 4px;
+    border: 2px dashed var(--accent); border-radius: 14px; background: var(--bg); cursor: pointer; }
+  .drop b { font-size: 17px; } .drop.over { background: rgba(226,97,27,.12); }
+  .rep-ok { margin-top: 10px; padding: 12px; border-radius: 10px; background: rgba(47,138,91,.12); font-size: 14px; line-height: 1.6; }
+  .rep-err { margin-top: 10px; padding: 12px; border-radius: 10px; background: rgba(192,57,43,.12); font-size: 14px; }
+  .vh { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
+  .filebtn { position: relative; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+  .inapp { background: #fff3cd; color: #5c4400; padding: 10px 14px; font-size: 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .inapp button { border: 0; border-radius: 8px; padding: 7px 12px; background: var(--accent); color: #fff; font-weight: 700; }
+  label.side, label.shot { cursor: pointer; }
+  .toast { position: fixed; left: 50%; bottom: calc(120px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 20;
+    background: #222; color: #fff; padding: 10px 16px; border-radius: 10px; font-size: 14px; max-width: 90vw; box-shadow: var(--shadow); }
+  .busy { position: fixed; inset: 0; z-index: 30; background: rgba(0,0,0,.45); display: grid; place-items: center; color: #fff; font-weight: 600; }
+  .mapwrap { position: relative; }
+  .mapbtns { position: absolute; left: 10px; top: 10px; z-index: 3; display: flex; gap: 6px; }
+  .mapbtns button { border: 1px solid #ccc; background: #fff; color: #222; border-radius: 8px; padding: 7px 11px; font-size: 14px; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+  .mapbtns button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .kpin { min-width: 28px; height: 28px; padding: 0 6px; border-radius: 14px; background: #e2611b; color: #fff; border: 2px solid #fff;
+    font: 700 13px/24px system-ui, sans-serif; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,.35); cursor: pointer; }
+  .kme { width: 16px; height: 16px; border-radius: 50%; background: #2b7de9; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(43,125,233,.25); }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <button class="prj" id="prjBtn" aria-label="현장 선택"><span id="prjName">현장 선택</span><small id="prjCount"></small>
+      <svg viewBox="0 0 24 24" style="width:18px;height:18px;flex-shrink:0"><path d="m6 9 6 6 6-6"/></svg></button>
+    <button class="install" id="install" hidden>📲 설치</button>
+    <span class="gps" id="gps">GPS 확인 중</span>
+    <button class="icon-btn" id="setBtn" aria-label="설정"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+  </div>
+  <nav class="tabs"><button class="on" data-tab="site">조사표</button><button data-tab="map">지도</button><button data-tab="list">사진</button><button data-tab="report">보고서(PC)</button></nav>
+</header>
+
+<div class="inapp" id="inappWarn" hidden>카톡 등 <b>앱 안에서</b> 열면 카메라·저장이 안 될 수 있어요.
+  <button type="button" id="openExt">사파리·크롬으로 열기</button></div>
+<main>
+  <section id="listView" hidden>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" hidden></div>
+  </section>
+  <section id="siteView">
+    <div class="list" id="siteListView"></div>
+    <button class="btn" id="addSite" style="width:100%;margin-top:10px">＋ 지점(구간) 추가</button>
+    <div class="muted" id="siteHint" style="margin-top:10px"></div>
+  </section>
+  <section id="mapView" hidden><div class="mapwrap"><div id="map"></div>
+    <div class="mapbtns"><button type="button" id="mapDistrict">지적도</button><button type="button" id="mapMe">내 위치</button></div></div>
+    <div class="muted" style="margin-top:6px"><b style="color:#1f9d55">초록</b> = 구간 (누르면 조사표), <b style="color:#e2611b">주황</b> = 사진 (누르면 사진 정보)</div></section>
+  <section id="reportView" hidden>
+    <div class="rep-card">
+      <h3>보고서 만들기 <span class="muted">(PC에서 · 한글 2014 이상)</span></h3>
+      <ol class="steps">
+        <li><b>폰</b>: 오른쪽 아래 <b>내보내기 → ZIP 저장</b> → 그 ZIP을 PC로 옮기기 (USB·메일 등)</li>
+        <li><b>PC</b>: 이 앱 링크를 열고 <b>보고서(PC)</b> 탭에서 ZIP을 아래 상자에 끌어다 놓기</li>
+        <li>채워진 <b>한글 파일(.hwpx)</b>이 바로 다운로드됩니다 (원본 양식은 그대로)</li>
+      </ol>
+      <label class="drop" id="repDrop">
+        <input type="file" id="repFile" accept=".zip,.hwpx" multiple hidden>
+        <b>📂 ZIP 파일을 여기에 끌어다 놓기</b><span>또는 눌러서 고르기</span>
+        <small class="muted">명하천·제천은 양식이 들어 있습니다. 다른 양식을 쓰려면 그 양식(.hwpx)도 같이 넣으세요.</small>
+      </label>
+      <button type="button" class="btn" id="repHere" style="width:100%;margin-top:8px">이 기기에 있는 자료로 바로 만들기 (지금 현장)</button>
+      <div id="repResult"></div>
+      <div class="muted" style="margin-top:8px">채우는 칸: 식생 종류(초본·교목·관목), 분포 형태, 밀생정도, 수고, 흉고직경, 수관폭, 현장사진 2장과 설명. 하도형태 및 지형은 그대로 둡니다.</div>
+    </div>
+    <h3 style="margin:16px 2px 8px;font-size:15px">구간별 준비 상태</h3>
+    <div class="list" id="repList"></div>
+  </section>
+</main>
+
+<div class="dock">
+  <label class="side" id="pickBtn" for="pick"><i><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></i>앨범</label>
+  <label class="shot" id="shotBtn" for="cam" aria-label="촬영"><svg viewBox="0 0 24 24"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3.5"/></svg></label>
+  <button class="side" id="expBtn"><i><svg viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 8 5-5 5 5"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></i>내보내기</button>
+</div>
+<input type="file" id="cam" accept="image/*" capture="environment" class="vh">
+<input type="file" id="pick" accept="image/*" multiple class="vh">
+
+<!-- 사진 정보 입력/수정 -->
+<dialog id="editDlg"><form method="dialog" class="sheet" id="editForm">
+  <h2><span id="editTitle">사진 정보</span><button class="x" value="cancel" aria-label="닫기">×</button></h2>
+  <div class="body">
+    <img class="preview" id="editImg" alt="미리보기">
+    <div class="row">
+      <label class="f n">번호<input type="number" id="fSeq" min="1" inputmode="numeric"></label>
+      <label class="f">지점명<input type="text" id="fLabel" list="siteNames" placeholder="예: 육역화 1구간" autocomplete="off"></label>
+    </div>
+    <label class="f">사진 종류<select id="fTag"><option value="전경">사진1 · 전경</option><option value="수목 및 식생 현황">사진2 · 수목 및 식생 현황</option><option value="">기타</option></select></label>
+    <label class="repchk"><input type="checkbox" id="fReport"> ★ 보고서에 넣을 사진 (종류별 1장)</label>
+    <datalist id="tagList"></datalist><datalist id="siteNames"></datalist>
+    <label class="f">메모<textarea id="fMemo" placeholder="상태, 치수, 특이사항 등"></textarea></label>
+    <div class="loc"><span class="t" id="fLoc"></span>
+      <button type="button" class="btn sm" id="locNow">현재 위치로</button>
+      <button type="button" class="btn sm" id="locClear">지우기</button></div>
+    <div class="muted" id="fTime"></div>
+    <details id="siteBox"><summary>조사표 항목 — <b id="siteBoxName"></b> <span class="muted">(같은 지점 사진끼리 공통)</span></summary>
+      <div class="fields" id="siteFields"></div></details>
+  </div>
+  <div class="foot">
+    <button type="button" class="btn danger" id="delBtn">삭제</button>
+    <button type="button" class="btn" id="shareOne">공유</button>
+    <span class="grow"></span>
+    <label class="btn filebtn" id="saveNext">저장 + 다음 촬영<input type="file" accept="image/*" capture="environment" class="vh" id="camNext"></label>
+    <button type="button" class="btn pri" id="saveBtn">저장</button>
+  </div>
+</form></dialog>
+
+<!-- 현장 선택 -->
+<dialog id="prjDlg"><form method="dialog" class="sheet">
+  <h2>현장<button class="x" value="cancel" aria-label="닫기">×</button></h2>
+  <div class="body">
+    <div class="list" id="prjList"></div>
+    <div class="list" id="presetBox" hidden></div>
+    <div class="row"><input type="text" id="newPrj" placeholder="새 현장 이름 (예: 제천 하도육역화)"><button type="button" class="btn pri" id="addPrj" style="flex:0 0 auto">추가</button></div>
+    <label class="f">새 현장 조사표 양식<select id="newTpl"><option value="river">하도육역화 현장조사표</option><option value="basic">없음 (사진·메모만)</option></select></label>
+    <div class="row" id="prjTools"><button type="button" class="btn" id="fldPrj">조사 항목 편집</button><button type="button" class="btn" id="renPrj">이름 바꾸기</button><button type="button" class="btn danger" id="delPrj">현장 삭제</button></div>
+  </div>
+</form></dialog>
+
+<!-- 지점(구간) 조사표 -->
+<dialog id="siteDlg"><form method="dialog" class="sheet">
+  <h2><span id="siteTitle">지점</span><button class="x" value="cancel" aria-label="닫기">×</button></h2>
+  <div class="body">
+    <label class="f">지점명 (구간)<input type="text" id="sName" placeholder="예: 육역화 1구간" autocomplete="off"></label>
+    <details class="info" id="sInfoBox"><summary>도상 정보 <span class="muted" id="sInfoSum"></span></summary><div class="kvs" id="sInfo"></div></details>
+    <div class="loc"><span class="t" id="sPosTxt"></span><button type="button" class="btn sm" id="sPosNow">현재 위치로 지정</button></div>
+    <div id="sShots">
+      <div class="shots" data-slot="1">
+        <div class="shots-hd"><b>사진1 · 전경 <span class="muted" data-cnt></span></b>
+          <label class="btn pri filebtn">📷 촬영<input type="file" accept="image/*" capture="environment" class="vh" data-cam></label><label class="btn filebtn">앨범<input type="file" accept="image/*" multiple class="vh" data-pick></label></div>
+        <div class="sgrid" data-grid></div>
+      </div>
+      <div class="shots" data-slot="2">
+        <div class="shots-hd"><b>사진2 · 수목 및 식생 현황 <span class="muted" data-cnt></span></b>
+          <label class="btn pri filebtn">📷 촬영<input type="file" accept="image/*" capture="environment" class="vh" data-cam></label><label class="btn filebtn">앨범<input type="file" accept="image/*" multiple class="vh" data-pick></label></div>
+        <div class="sgrid" data-grid></div>
+      </div>
+      <div class="shots" data-slot="0" hidden><div class="shots-hd"><b>기타 사진</b></div><div class="sgrid" data-grid></div></div>
+      <div class="muted">촬영을 누를 때마다 바로 저장됩니다. <b>★</b> 표시 사진이 보고서에 들어갑니다 (기본: 첫 장). 사진을 누르면 ★ 지정·메모·삭제.</div>
+    </div>
+    <div class="fields" id="sFieldsBox"></div>
+  </div>
+  <div class="foot">
+    <button type="button" class="btn danger" id="sDel">지점 삭제</button><span class="grow"></span>
+    <button type="button" class="btn pri" id="sSave">저장</button>
+  </div>
+</form></dialog>
+
+<!-- 조사 항목 편집 -->
+<dialog id="fldDlg"><form method="dialog" class="sheet">
+  <h2>조사 항목 편집<button class="x" value="cancel" aria-label="닫기">×</button></h2>
+  <div class="body">
+    <div class="muted">한 줄에 한 항목. 빠른 입력 버튼은 <b>|</b> 뒤에 쉼표로 적습니다.<br>예) 식생 밀생정도 | 밀생, 보통, 산생</div>
+    <textarea id="fldText" style="min-height:260px;font-size:14px"></textarea>
+    <button type="button" class="btn" id="fldRiver">하도육역화 양식으로 채우기</button>
+  </div>
+  <div class="foot"><span class="grow"></span><button type="button" class="btn pri" id="fldSave">저장</button></div>
+</form></dialog>
+
+<!-- 내보내기 -->
+<dialog id="expDlg"><form method="dialog" class="sheet">
+  <h2>내보내기<button class="x" value="cancel" aria-label="닫기">×</button></h2>
+  <div class="body">
+    <div class="chk" style="grid-template-columns:1fr"><label><input type="checkbox" id="expStamp" checked> 사진에 정보 글자 넣기 (스탬프)</label></div>
+    <div class="exp">
+      <button type="button" class="btn pri" id="expZip">📥 ZIP 저장 <small>사진(지점별 폴더) + 조사표·사진목록(CSV) + 위치(KML) + 보고서 자료 — PC 보고서(PC) 탭에 넣으면 한글 파일이 나옵니다</small></button>
+      <button type="button" class="btn" id="expPhotos">🖼 사진만 ZIP 저장 <small>구간별 폴더 · 파일 이름 그대로 (번호_구간_날짜시각.jpg) — 사진 폴더 정리용</small></button>
+      <button type="button" class="btn" id="expSite">조사표만 (CSV) <small>지점별 조사 항목 — 엑셀에서 열어 한글 표에 옮기기</small></button>
+      <button type="button" class="btn" id="expCsv">사진 목록만 (CSV) <small>번호·지점명·메모·일시·좌표</small></button>
+      <button type="button" class="btn" id="expKml">위치만 (KML) <small>지도 프로그램에서 열기</small></button>
+    </div>
+    <div class="muted">사진 파일에는 촬영 일시와 GPS 좌표(EXIF)가 들어가서 QGIS·구글어스 등에서 위치가 인식됩니다.</div>
+  </div>
+</form></dialog>
+
+<!-- 설정 -->
+<dialog id="setDlg"><form method="dialog" class="sheet">
+  <h2>설정<button class="x" value="cancel" aria-label="닫기">×</button></h2>
+  <div class="body">
+    <label class="f">저장 해상도 (긴 변)
+      <select id="sSize"><option value="0">원본 그대로</option><option value="3000">3000px (권장)</option><option value="2000">2000px</option><option value="1600">1600px (용량 절약)</option></select></label>
+    <div><div class="muted" style="margin-bottom:6px">스탬프에 넣을 정보</div>
+      <div class="chk" id="sFields">
+        <label><input type="checkbox" data-k="project"> 현장명</label>
+        <label><input type="checkbox" data-k="label"> 번호·지점명</label>
+        <label><input type="checkbox" data-k="tag"> 분류</label>
+        <label><input type="checkbox" data-k="memo"> 메모</label>
+        <label><input type="checkbox" data-k="time"> 촬영 일시</label>
+        <label><input type="checkbox" data-k="coord"> 좌표</label>
+      </div></div>
+    <label class="f">스탬프 위치
+      <select id="sPos"><option value="bl">왼쪽 아래</option><option value="br">오른쪽 아래</option><option value="tl">왼쪽 위</option><option value="tr">오른쪽 위</option></select></label>
+    <div class="muted" id="sStore"></div>
+    <div class="muted">사진은 이 기기의 브라우저 안에만 저장됩니다. 브라우저 데이터를 지우면 사라지니, 조사가 끝나면 꼭 <b>내보내기 → ZIP 저장</b>으로 백업하세요.</div>
+  </div>
+</form></dialog>
+
+<script src="app.js"></script>
+<script src="hwpx.js"></script>
+</body>
+</html>
